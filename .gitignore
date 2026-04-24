@@ -2,3 +2,6 @@ Tony-Website-Cyber.backup.html
 node_modules/
 .DS_Store
 *.log
+# Raw captures — regeneratable via take-screenshots.js. We keep only the
+# compressed JPEGs that actually get embedded into the bundle.
+screenshots/*.png
