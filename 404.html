@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>404 — Page Not Found · Tony Teng</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="404 — the page you tried to reach doesn't exist. Type 'home' to get back.">
+<style>
+  :root {
+    --bg: #04040f;
+    --bg2: #0a0a1a;
+    --green: #00ff41;
+    --green-dim: #00aa2b;
+    --cyan: #00ffff;
+    --magenta: #ff00ff;
+    --grey: #8892a0;
+    --red: #ff5555;
+    --yellow: #ffd866;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--green);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
+    font-size: 14px;
+    line-height: 1.55;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  canvas#rain {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    opacity: 0.18;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .scanlines {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 255, 65, 0.03) 0px,
+      rgba(0, 255, 65, 0.03) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    z-index: 1;
+    mix-blend-mode: screen;
+  }
+  .terminal {
+    position: relative;
+    z-index: 2;
+    width: min(820px, 100%);
+    max-height: calc(100vh - 32px);
+    background: rgba(8, 10, 22, 0.92);
+    border: 1px solid rgba(0, 255, 65, 0.35);
+    border-radius: 10px;
+    box-shadow:
+      0 0 0 1px rgba(0, 255, 65, 0.08),
+      0 30px 80px rgba(0, 0, 0, 0.6),
+      0 0 60px rgba(0, 255, 65, 0.12);
+    backdrop-filter: blur(2px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .chrome {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: linear-gradient(180deg, #11132a 0%, #0a0c1a 100%);
+    border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; }
+  .dot.y { background: #febc2e; }
+  .dot.g { background: #28c840; }
+  .title {
+    margin-left: 10px;
+    color: var(--grey);
+    font-size: 12px;
+    user-select: none;
+  }
+  .body {
+    padding: 18px 20px 16px;
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: var(--green-dim) transparent;
+  }
+  .body::-webkit-scrollbar { width: 8px; }
+  .body::-webkit-scrollbar-thumb { background: rgba(0, 255, 65, 0.3); border-radius: 4px; }
+  .line { white-space: pre-wrap; word-break: break-word; }
+  .prompt { color: var(--cyan); }
+  .user { color: var(--green); }
+  .path { color: var(--yellow); }
+  .err { color: var(--red); }
+  .dim { color: var(--grey); }
+  .accent { color: var(--magenta); }
+  .ok { color: var(--green); }
+  .ascii {
+    color: var(--green);
+    text-shadow: 0 0 6px rgba(0, 255, 65, 0.6);
+    font-size: 11px;
+    line-height: 1.05;
+    margin: 8px 0 12px;
+  }
+  .ascii.glitch { animation: glitch 4s 1s infinite; }
+  @keyframes glitch {
+    0%, 92% { text-shadow: 0 0 6px rgba(0, 255, 65, 0.6); transform: none; }
+    93% { text-shadow: 2px 0 var(--cyan), -2px 0 var(--magenta); transform: translate(-1px, 0); }
+    94% { text-shadow: -2px 0 var(--cyan), 2px 0 var(--magenta); transform: translate(1px, 0); }
+    95% { text-shadow: 0 0 6px rgba(0, 255, 65, 0.6); transform: none; }
+  }
+  .input-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .input-row .promptline { color: var(--cyan); white-space: nowrap; }
+  .input-row .promptline .user { color: var(--green); }
+  .input-row .promptline .path { color: var(--yellow); }
+  #cmd {
+    flex: 1;
+    background: transparent;
+    border: 0;
+    outline: 0;
+    color: var(--green);
+    font: inherit;
+    caret-color: transparent;
+  }
+  .caret {
+    display: inline-block;
+    width: 8px; height: 1em;
+    background: var(--green);
+    vertical-align: text-bottom;
+    margin-left: 2px;
+    animation: blink 1s steps(2) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  a.linkish {
+    color: var(--cyan);
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(0, 255, 255, 0.4);
+  }
+  a.linkish:hover { color: var(--green); border-color: var(--green); }
+  .hint {
+    margin-top: 10px;
+    color: var(--grey);
+    font-size: 12px;
+  }
+  .hint kbd {
+    background: rgba(0, 255, 65, 0.08);
+    border: 1px solid rgba(0, 255, 65, 0.25);
+    border-radius: 3px;
+    padding: 1px 6px;
+    color: var(--green);
+    font-family: inherit;
+    font-size: 11px;
+  }
+  @media (max-width: 560px) {
+    body { font-size: 13px; padding: 8px; }
+    .body { padding: 14px 14px 12px; }
+    .ascii { font-size: 8px; }
+    .title { display: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<div class="scanlines"></div>
+
+<div class="terminal" id="terminal">
+  <div class="chrome">
+    <div class="dot r"></div>
+    <div class="dot y"></div>
+    <div class="dot g"></div>
+    <div class="title">tony@portfolio: ~ — bash — 80x24</div>
+  </div>
+  <div class="body" id="body">
+    <div id="output"></div>
+    <div class="input-row" id="inputrow" style="display:none">
+      <span class="promptline"><span class="user">tony@portfolio</span>:<span class="path">~</span>$</span>
+      <input id="cmd" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+      <span class="caret" id="caret"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var output    = document.getElementById('output');
+  var inputRow  = document.getElementById('inputrow');
+  var cmdInput  = document.getElementById('cmd');
+  var bodyEl    = document.getElementById('body');
+
+  var requestedPath = (location.pathname + location.search) || '/';
+  if (requestedPath.length > 80) requestedPath = requestedPath.slice(0, 77) + '...';
+
+  var ASCII_404 = [
+    "  _  _    ___  _  _   ",
+    " | || |  / _ \\| || |  ",
+    " | || |_| | | | || |_ ",
+    " |__   _| |_| |__   _|",
+    "    |_|  \\___/   |_|  "
+  ].join("\n");
+
+  function el(tag, cls, text) {
+    var d = document.createElement(tag);
+    if (cls) d.className = cls;
+    if (text != null) d.textContent = text;
+    return d;
+  }
+
+  function scrollBottom() {
+    bodyEl.scrollTop = bodyEl.scrollHeight;
+  }
+
+  // Append a finished line
+  function writeLine(html) {
+    var d = document.createElement('div');
+    d.className = 'line';
+    d.innerHTML = html;
+    output.appendChild(d);
+    scrollBottom();
+    return d;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+    });
+  }
+
+  // Type a string into a target element, char-by-char
+  function typeInto(target, text, speed, done) {
+    var i = 0;
+    (function step() {
+      if (i >= text.length) { if (done) done(); return; }
+      target.textContent += text.charAt(i++);
+      scrollBottom();
+      setTimeout(step, speed);
+    })();
+  }
+
+  // Type a "command" line (cyan prompt + green text being typed) and resolve when done
+  function typeCommand(text, speed) {
+    return new Promise(function (resolve) {
+      var line = document.createElement('div');
+      line.className = 'line';
+      line.innerHTML =
+        '<span class="promptline"><span class="user">tony@portfolio</span>:<span class="path">~</span>$</span> ';
+      var typed = el('span', 'user');
+      line.appendChild(typed);
+      var caret = el('span', 'caret');
+      line.appendChild(caret);
+      output.appendChild(line);
+      scrollBottom();
+      typeInto(typed, text, speed || 75, function () {
+        caret.remove();
+        resolve();
+      });
+    });
+  }
+
+  function pause(ms) {
+    return new Promise(function (r) { setTimeout(r, ms); });
+  }
+
+  var PAGES = [
+    { name: 'about',      desc: 'who I am' },
+    { name: 'experience', desc: 'work history' },
+    { name: 'skills',     desc: 'tech stack' },
+    { name: 'projects',   desc: 'things I have built' },
+    { name: 'web',        desc: 'sites I have shipped' },
+    { name: 'contact',    desc: 'how to reach me' }
+  ];
+
+  var COMMANDS = {
+    help: function () {
+      writeLine('<span class="dim">available commands:</span>');
+      writeLine('  <span class="ok">ls</span>          — list sections of the site');
+      writeLine('  <span class="ok">cd ~</span>        — return to homepage');
+      writeLine('  <span class="ok">cd &lt;name&gt;</span>  — jump to a section (e.g. <span class="accent">cd projects</span>)');
+      writeLine('  <span class="ok">home</span>        — same as <span class="accent">cd ~</span>');
+      writeLine('  <span class="ok">whoami</span>      — about the host');
+      writeLine('  <span class="ok">contact</span>     — open email');
+      writeLine('  <span class="ok">github</span>      — open GitHub');
+      writeLine('  <span class="ok">sudo</span>        — try it');
+      writeLine('  <span class="ok">clear</span>       — wipe the screen');
+      writeLine('  <span class="ok">exit</span>        — leave (also goes home)');
+    },
+    ls: function () {
+      var rows = PAGES.map(function (p) {
+        return '  <a class="linkish" href="/#' + p.name + '">' +
+               p.name.padEnd(12, ' ') + '</a><span class="dim">' + p.desc + '</span>';
+      }).join('<br>');
+      writeLine(rows);
+    },
+    cd: function (arg) {
+      if (!arg || arg === '~' || arg === '/' || arg === '..' || arg === 'home') {
+        writeLine('<span class="dim">redirecting to /</span>');
+        setTimeout(function () { location.href = '/'; }, 350);
+        return;
+      }
+      var hit = PAGES.find(function (p) { return p.name === arg.toLowerCase(); });
+      if (hit) {
+        writeLine('<span class="dim">jumping to #' + hit.name + '</span>');
+        setTimeout(function () { location.href = '/#' + hit.name; }, 350);
+      } else {
+        writeLine('<span class="err">bash: cd: ' + escapeHtml(arg) + ': No such file or directory</span>');
+        writeLine('<span class="dim">try </span><span class="accent">ls</span><span class="dim"> to see what is here.</span>');
+      }
+    },
+    home: function () { COMMANDS.cd('~'); },
+    exit: function () { COMMANDS.cd('~'); },
+    whoami: function () {
+      writeLine('<span class="ok">bingsen (tony) teng</span>');
+      writeLine('<span class="dim">developer · cybersecurity · ai systems</span>');
+      writeLine('<span class="dim">mcs @ university of melbourne</span>');
+    },
+    contact: function () {
+      writeLine('<span class="dim">opening mail client...</span>');
+      setTimeout(function () { location.href = 'mailto:bingsen.teng777@gmail.com'; }, 250);
+    },
+    github: function () {
+      writeLine('<span class="dim">opening github.com/Tonieeie...</span>');
+      setTimeout(function () { window.open('https://github.com/Tonieeie', '_blank', 'noopener'); }, 250);
+    },
+    sudo: function () {
+      writeLine('<span class="err">[sudo] password for visitor:</span> <span class="dim">****************</span>');
+      writeLine('<span class="err">visitor is not in the sudoers file. This incident will be reported.</span>');
+    },
+    clear: function () {
+      output.innerHTML = '';
+    },
+    '': function () { /* empty enter, do nothing */ }
+  };
+
+  function runCommand(raw) {
+    var trimmed = raw.trim();
+    // echo the entered command
+    writeLine(
+      '<span class="promptline"><span class="user">tony@portfolio</span>:<span class="path">~</span>$</span> ' +
+      escapeHtml(trimmed)
+    );
+    if (trimmed === '') return;
+    var parts = trimmed.split(/\s+/);
+    var name = parts[0].toLowerCase();
+    var arg  = parts.slice(1).join(' ');
+    var fn = COMMANDS[name];
+    if (fn) {
+      fn(arg);
+    } else {
+      writeLine('<span class="err">bash: ' + escapeHtml(name) + ': command not found</span>');
+      writeLine('<span class="dim">type </span><span class="accent">help</span><span class="dim"> for a list of commands.</span>');
+    }
+  }
+
+  // ── Boot sequence ──────────────────────────────────────────────────────────
+  function boot() {
+    writeLine('<span class="dim">Last login: ' + new Date().toUTCString() + ' on ttys000</span>');
+    return typeCommand('cd ' + requestedPath, 75)
+      .then(function () { return pause(220); })
+      .then(function () {
+        writeLine('<span class="err">bash: cd: ' + escapeHtml(requestedPath) + ': No such file or directory</span>');
+        return pause(420);
+      })
+      .then(function () { return typeCommand('status --code', 70); })
+      .then(function () { return pause(180); })
+      .then(function () {
+        var d = el('pre', 'ascii glitch');
+        d.textContent = ASCII_404;
+        output.appendChild(d);
+        writeLine('<span class="dim">the page you requested could not be located on this server.</span>');
+        return pause(380);
+      })
+      .then(function () { return typeCommand('help', 90); })
+      .then(function () { return pause(120); })
+      .then(function () {
+        COMMANDS.help();
+        writeLine('');
+        writeLine('<span class="dim">tip: type </span><span class="accent">cd ~</span><span class="dim"> or hit </span><kbd>Enter</kbd><span class="dim"> on an empty line to go home.</span>');
+        inputRow.style.display = 'flex';
+        cmdInput.focus();
+      });
+  }
+
+  // ── Input handling ─────────────────────────────────────────────────────────
+  var history = [];
+  var hIndex  = -1;
+
+  cmdInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      var v = cmdInput.value;
+      if (v.trim().length) { history.push(v); }
+      hIndex = history.length;
+      cmdInput.value = '';
+      runCommand(v);
+      scrollBottom();
+    } else if (e.key === 'ArrowUp') {
+      if (history.length && hIndex > 0) {
+        hIndex--;
+        cmdInput.value = history[hIndex];
+        e.preventDefault();
+      }
+    } else if (e.key === 'ArrowDown') {
+      if (hIndex < history.length - 1) {
+        hIndex++;
+        cmdInput.value = history[hIndex];
+      } else {
+        hIndex = history.length;
+        cmdInput.value = '';
+      }
+      e.preventDefault();
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      var prefix = cmdInput.value.toLowerCase();
+      var pool = Object.keys(COMMANDS).concat(PAGES.map(function (p) { return p.name; }));
+      var match = pool.filter(function (k) { return k && k.indexOf(prefix) === 0; });
+      if (match.length === 1) cmdInput.value = match[0];
+    }
+  });
+
+  // Click anywhere in the terminal body refocuses input
+  bodyEl.addEventListener('click', function () { cmdInput.focus(); });
+
+  // ── Matrix rain background ─────────────────────────────────────────────────
+  (function rain() {
+    var canvas = document.getElementById('rain');
+    var ctx = canvas.getContext('2d');
+    var cols, drops;
+    var glyphs = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンｱｲｳｴｵｶｷｸｹｺ0123456789ABCDEF<>/$#@!*+=';
+
+    function resize() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      cols = Math.floor(canvas.width / 14);
+      drops = new Array(cols).fill(0).map(function () {
+        return Math.random() * -canvas.height / 16;
+      });
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function frame() {
+      ctx.fillStyle = 'rgba(4, 4, 15, 0.08)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = '14px ui-monospace, Menlo, Consolas, monospace';
+      ctx.fillStyle = '#00ff41';
+      for (var i = 0; i < cols; i++) {
+        var ch = glyphs.charAt(Math.floor(Math.random() * glyphs.length));
+        ctx.fillText(ch, i * 14, drops[i] * 16);
+        if (drops[i] * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    }
+    setInterval(frame, 55);
+  })();
+
+  // Kick off
+  boot();
+})();
+</script>
+</body>
+</html>
