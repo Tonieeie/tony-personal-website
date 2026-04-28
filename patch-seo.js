@@ -9,15 +9,15 @@ const htmlSafe = (s) => JSON.stringify(s).replace(/<\//g, '<\\/');
 
 const CANONICAL = 'https://tonyteng.dev/';
 const OG_IMAGE  = CANONICAL + 'profile.jpg';
-const DESC      = "Bingsen (Tony) Teng — Master of Computer Science at the University of Melbourne. Developer, cryptography tutor, and CTO. Portfolio covering cybersecurity, AI systems, penetration testing, and software engineering.";
+const DESC      = "Bingsen (Tony) Teng (滕炳森) — Master of Computer Science at the University of Melbourne. Developer, cryptography tutor, and CTO. Portfolio covering cybersecurity, AI systems, penetration testing, and software engineering.";
 const SHORT     = "Developer · Cybersecurity · AI Systems. MCS @ University of Melbourne.";
-const KEYWORDS  = "Bingsen Teng, Tony Teng, Bingsen Tony Teng, Tony Teng Melbourne, Bingsen Teng Melbourne, Tony Teng developer, Bingsen Teng developer, Tony Teng University of Melbourne, cybersecurity, penetration testing, AI systems, portfolio";
+const KEYWORDS  = "Bingsen Teng, Tony Teng, Bingsen Tony Teng, Tony Teng Melbourne, Bingsen Teng Melbourne, Tony Teng developer, Bingsen Teng developer, Tony Teng University of Melbourne, 滕炳森, 滕炳森 开发者, 滕炳森 墨尔本大学, 滕炳森 网络安全, Tony Teng Bingsen, cybersecurity, penetration testing, AI systems, portfolio";
 
 const jsonLd = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "Person",
   "name": "Bingsen Teng",
-  "alternateName": ["Tony Teng", "Bingsen (Tony) Teng"],
+  "alternateName": ["Tony Teng", "Bingsen (Tony) Teng", "滕炳森", "Tony Teng Bingsen", "Bingsen Tony Teng"],
   "givenName": "Bingsen",
   "additionalName": "Tony",
   "familyName": "Teng",
@@ -41,7 +41,7 @@ const SEO_BLOCK = [
   '  <link rel="canonical" href="' + CANONICAL + '">',
   '  <meta property="og:type" content="profile">',
   '  <meta property="og:site_name" content="Tony Teng">',
-  '  <meta property="og:title" content="Bingsen (Tony) Teng — Developer">',
+  '  <meta property="og:title" content="Bingsen (Tony) Teng · 滕炳森 — Developer">',
   '  <meta property="og:description" content="' + SHORT + '">',
   '  <meta property="og:url" content="' + CANONICAL + '">',
   '  <meta property="og:image" content="' + OG_IMAGE + '">',
@@ -52,7 +52,7 @@ const SEO_BLOCK = [
   '  <meta property="profile:last_name" content="Teng">',
   '  <meta property="profile:username" content="Tonieeie">',
   '  <meta name="twitter:card" content="summary_large_image">',
-  '  <meta name="twitter:title" content="Bingsen (Tony) Teng — Developer">',
+  '  <meta name="twitter:title" content="Bingsen (Tony) Teng · 滕炳森 — Developer">',
   '  <meta name="twitter:description" content="' + SHORT + '">',
   '  <meta name="twitter:image" content="' + OG_IMAGE + '">',
   '  <script type="application/ld+json">' + jsonLd + '</script>',
