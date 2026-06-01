@@ -11,7 +11,7 @@ const htmlSafe = (s) => JSON.stringify(s).replace(/<\//g, '<\\/');
 const IMG_DIR = 'D:/Desktop/Tony_personal_website/screenshots';
 const SITES = [
   { key: 'ausdroid',        name: 'Ausdroid',         url: 'https://www.ausdroid.org/',     desc: 'Robotics & AI Club — University of Melbourne' },
-  { key: 'vsspartner',      name: 'VSSPartner',       url: 'https://www.vsspartner.com/',   desc: 'Social-media growth marketing agency' },
+  { key: 'vsspartner',      name: 'VSSPartner',       url: 'https://vsspartner.com/student', desc: 'Social-media growth marketing agency' },
   { key: 'brandpulsemedia', name: 'BrandPulse Media', url: 'https://brandpulsemedia.co/',   desc: 'Digital marketing agency — Melbourne' },
   { key: 'periplerv',       name: 'Periple RV',       url: 'https://www.periplerv.com.au/', desc: 'Premium recreational vehicles — Australia' },
 ];

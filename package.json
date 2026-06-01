@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "dev": "node dev-server.js 4000"
+  },
   "dependencies": {
     "sharp": "^0.34.5"
   }
