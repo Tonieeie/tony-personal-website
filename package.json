@@ -1,8 +1,13 @@
 {
   "scripts": {
-    "dev": "node dev-server.js 4000"
+    "dev": "node dev-server.js 4000",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
   },
   "dependencies": {
     "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "wrangler": "^4.107.0"
   }
 }

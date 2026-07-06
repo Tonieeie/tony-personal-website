@@ -5,3 +5,10 @@ node_modules/
 # Raw captures — regeneratable via take-screenshots.js. We keep only the
 # compressed JPEGs that actually get embedded into the bundle.
 screenshots/*.png
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
