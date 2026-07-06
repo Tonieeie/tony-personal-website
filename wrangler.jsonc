@@ -1,0 +1,13 @@
+// Cloudflare Workers deploy config for tonyteng.dev.
+// The important bit is `not_found_handling`: unknown paths (e.g. the
+// /infected.exe easter-egg link in the nav) get served the 404.html
+// terminal page instead of a bare 404. Vercel did this by convention;
+// Cloudflare needs it declared explicitly.
+{
+  "name": "tony-personal-website",
+  "compatibility_date": "2026-07-06",
+  "assets": {
+    "directory": "./",
+    "not_found_handling": "404-page"
+  }
+}

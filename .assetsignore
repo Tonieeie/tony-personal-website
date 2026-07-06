@@ -11,3 +11,5 @@ patch-*.js
 package.json
 package-lock.json
 .gitignore
+wrangler.jsonc
+.assetsignore
