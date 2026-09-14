@@ -8,6 +8,13 @@ generate-favicons.js
 take-screenshots.js
 inject-*.js
 patch-*.js
+prepare-holo-assets.js
+tmp/
+assets/holo-card/background.png
+assets/holo-card/subject-mask.png
+assets/holo-card/subject.png
+assets/holo-card/asset-validation.json
+assets/holo-card/README.md
 package.json
 package-lock.json
 .gitignore
