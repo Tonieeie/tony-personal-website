@@ -55,6 +55,16 @@
 .holo-back-footer { display: flex; justify-content: space-between; gap: 8px; margin-top: auto; border-top: 1px solid #b8ead626; padding-top: 16px; font-size: 7px; color: #91baaa; }
 .holo-caption { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 25px; font-size: 8px; letter-spacing: .12em; color: var(--muted); }
 .holo-hint-touch { display: none; }
+.holo-motion { display: none; margin-top: 16px; }
+.holo-motion-actions { display: flex; gap: 8px; }
+.holo-motion-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font-family: inherit; font-size: 11px; line-height: 1.4; cursor: pointer; }
+.holo-motion-toggle { flex: 1; }
+.holo-motion-actions button:hover, .holo-motion-toggle[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.holo-motion-actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.holo-motion-actions button:disabled { opacity: .6; cursor: wait; }
+.holo-motion-status { margin: 8px 2px 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
+.holo-profile[data-motion="on"] .holo-foil { opacity: .75; }
+@media (any-pointer: coarse), (max-width: 760px) { .holo-motion { display: block; } }
 .holo-contact { display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin-top: 12px; padding: 0 4px; color: var(--text); border-bottom: 1px solid var(--border); font-size: 11px; text-decoration: none; transition: color 180ms, border-color 180ms; }
 .holo-contact:hover { color: var(--accent); border-color: var(--accent); }
 .holo-contact:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }

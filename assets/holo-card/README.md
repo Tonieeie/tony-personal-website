@@ -9,6 +9,26 @@ centres the card. Touch movement also changes the reflection; vertical page
 scrolling stays available. Reduced-motion preferences disable tilt, parallax,
 and animated transitions. There is no perpetual animation loop.
 
+On phones, choose **Enable motion**, then grant the browser's motion permission
+if asked. The first valid reading calibrates the comfortable holding position;
+tilting drives the existing card, parallax and foil. **Recenter** calibrates again;
+**Disable motion** restores pointer/touch control. HTTPS and a browser exposing
+DeviceOrientation are required. No permission is requested automatically, and
+sensor data stays in the page. Denied permission or missing sensor readings
+leave touch controls available. Reduced-motion preferences prevent enabling
+the sensor effect. Sensor updates pause offscreen and in background tabs, and
+returning to the card or changing screen orientation recalibrates. The controller
+uses relative quaternion rotation, bounded angles and a low-pass filter to
+avoid angle wraparound and hand jitter. Keyboard arrows switch back to manual
+control; Escape recentres motion and returns to the front.
+
+Run `node --test tests/holo-motion.test.cjs` from the project root for the nine
+controller tests (permission outcomes, tilt maths, calibration, filtering,
+timeouts, visibility, reduced motion and cleanup). Browser QA checks the mobile
+controls and the denied-permission fallback. Physical iPhone/Android sensor
+behaviour and the native permission sheet still require an HTTPS real-device
+check after deployment; the automated tests simulate sensor readings.
+
 ## Implementation and assets
 
 - `card.jsx`: React component, pointer and keyboard interaction, cleanup.

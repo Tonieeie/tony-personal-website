@@ -10,6 +10,7 @@ inject-*.js
 patch-*.js
 prepare-holo-assets.js
 tmp/
+tests/
 assets/holo-card/background.png
 assets/holo-card/subject-mask.png
 assets/holo-card/subject.png
