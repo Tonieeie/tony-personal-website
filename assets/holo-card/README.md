@@ -7,7 +7,8 @@ Move the pointer to tilt and change the foil reflection. Click or press Enter /
 Space to turn the card over. Arrow keys tilt; Escape returns to the front and
 centres the card. Touch movement also changes the reflection; vertical page
 scrolling stays available. Reduced-motion preferences disable tilt, parallax,
-and animated transitions. There is no perpetual animation loop.
+and animated transitions. The only running animation is the rift behind the
+portrait, which pauses whenever the card is off screen.
 
 On phones, choose **Enable motion**, then grant the browser's motion permission
 if asked. The first valid reading calibrates the comfortable holding position;
@@ -34,10 +35,15 @@ check after deployment; the automated tests simulate sensor readings.
 - `card.jsx`: React component, pointer and keyboard interaction, cleanup.
 - `card.css`: independently positioned background, orbit, portrait, effects,
   typography, glare and frame; responsive front and back.
-- `subject.webp`: web foreground with genuine alpha. Its RGB pixels come from
-  the original `../../profile.jpg`, with an imagegen-created silhouette matte.
-- `background.webp`: compressed web version of the generated environment.
-- `subject.png`, `subject-mask.png`, `background.png`: editable source assets.
+- `subject.webp`: web foreground with genuine alpha — an AI-retouched portrait
+  (black bomber jacket, red rim light) generated with a transparent background;
+  `subject.png` is its full-size source.
+- Multiverse restyle (Oct 2026): the card's colours, comic-print ground, foil and
+  frame are overridden in `../spiderverse/spiderverse.css` ("Holo card —
+  multiverse edition"), and the old neon orbit is replaced by `HoloRift`, a live
+  `GlitchRift` canvas behind the portrait (animates only while on screen).
+- `background.webp` / `background.png` (the earlier green environment) and
+  `subject-mask.png` are no longer displayed.
 - `asset-validation.json`: alpha validation from `node prepare-holo-assets.js`.
 
 Web image payload totals approximately 143 KiB. Source PNGs and preparation

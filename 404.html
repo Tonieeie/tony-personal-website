@@ -7,88 +7,92 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<title>404 — Page Not Found · Tony Teng</title>
+<title>404 — Anomaly Detected · Tony Teng</title>
 <meta name="robots" content="noindex">
-<meta name="description" content="404 — the page you tried to reach doesn't exist. Type 'home' to get back.">
+<meta name="description" content="404 — you glitched into Earth-404, a dimension where this page doesn't exist. Type 'home' to get back.">
 <style>
   :root {
-    --bg: #04040f;
-    --bg2: #0a0a1a;
-    --green: #00ff41;
-    --green-dim: #00aa2b;
-    --cyan: #00ffff;
-    --magenta: #ff00ff;
-    --grey: #8892a0;
-    --red: #ff5555;
-    --yellow: #ffd866;
+    --bg: #05040b;
+    --ink: #f5f3ff;
+    --magenta: #ff2bd6;
+    --cyan: #00f0ff;
+    --yellow: #ffe14d;
+    --red: #ff4d6d;
+    --violet: #9b6bff;
+    --grey: #9b97b5;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; }
   body {
-    background: var(--bg);
-    color: var(--green);
+    background:
+      radial-gradient(ellipse at 50% 45%, #1d0838 0%, #0a0616 45%, var(--bg) 80%);
+    background-color: var(--bg);
+    color: var(--ink);
     font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
     font-size: 14px;
     line-height: 1.55;
     overflow: hidden;
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 16px;
+    justify-content: flex-start;
+    padding: 16px 16px 16px max(16px, 7vw);
   }
-  canvas#rain {
-    position: fixed; inset: 0;
-    width: 100%; height: 100%;
-    opacity: 0.18;
+  /* The rift you fell through, still churning beside the terminal. */
+  canvas#rift {
+    position: fixed; left: 74%; top: 50%;
+    width: min(86vmin, 780px); height: min(86vmin, 780px);
+    transform: translate(-50%, -50%);
     pointer-events: none;
     z-index: 0;
   }
-  .scanlines {
+  .halftone {
     position: fixed; inset: 0;
     pointer-events: none;
-    background: repeating-linear-gradient(
-      to bottom,
-      rgba(0, 255, 65, 0.03) 0px,
-      rgba(0, 255, 65, 0.03) 1px,
-      transparent 1px,
-      transparent 3px
-    );
+    background: radial-gradient(circle, rgba(255, 43, 214, 0.18) 0 1.2px, transparent 1.8px) 0 0 / 12px 12px;
+    -webkit-mask-image: radial-gradient(ellipse at center, transparent 30%, #000 85%);
+    mask-image: radial-gradient(ellipse at center, transparent 30%, #000 85%);
     z-index: 1;
-    mix-blend-mode: screen;
   }
   .terminal {
     position: relative;
     z-index: 2;
-    width: min(820px, 100%);
+    width: min(680px, 100%);
     max-height: calc(100vh - 32px);
-    background: rgba(8, 10, 22, 0.92);
-    border: 1px solid rgba(0, 255, 65, 0.35);
-    border-radius: 10px;
-    box-shadow:
-      0 0 0 1px rgba(0, 255, 65, 0.08),
-      0 30px 80px rgba(0, 0, 0, 0.6),
-      0 0 60px rgba(0, 255, 65, 0.12);
-    backdrop-filter: blur(2px);
+    background: rgba(9, 7, 18, 0.93);
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    box-shadow: -4px 0 0 var(--cyan), 4px 0 0 var(--magenta), 12px 12px 0 #000;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    animation: tear 5.2s steps(1) infinite;
+  }
+  /* Every few seconds the window slips out of register and tears in slices. */
+  @keyframes tear {
+    0%, 93%, 100% { transform: none; clip-path: none; box-shadow: -4px 0 0 var(--cyan), 4px 0 0 var(--magenta), 12px 12px 0 #000; }
+    94% { transform: translateX(-6px) skewX(-3deg); clip-path: inset(0 0 52% 0); box-shadow: -10px 0 0 var(--cyan), 10px 0 0 var(--magenta), 12px 12px 0 #000; }
+    95.5% { transform: translateX(5px); clip-path: inset(30% 0 8% 0); }
+    97% { transform: translateX(-2px); clip-path: none; box-shadow: -7px 0 0 var(--yellow), 7px 0 0 var(--cyan), 12px 12px 0 #000; }
   }
   .chrome {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 14px;
-    background: linear-gradient(180deg, #11132a 0%, #0a0c1a 100%);
-    border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+    padding: 9px 14px;
+    background: var(--yellow);
+    border-bottom: 2px solid #000;
   }
-  .dot { width: 12px; height: 12px; border-radius: 50%; }
-  .dot.r { background: #ff5f57; }
-  .dot.y { background: #febc2e; }
-  .dot.g { background: #28c840; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #000; }
+  .dot.r { background: var(--magenta); }
+  .dot.y { background: #fff; }
+  .dot.g { background: var(--cyan); }
   .title {
     margin-left: 10px;
-    color: var(--grey);
+    color: #111;
     font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     user-select: none;
   }
   .body {
@@ -96,31 +100,48 @@
     overflow-y: auto;
     flex: 1;
     scrollbar-width: thin;
-    scrollbar-color: var(--green-dim) transparent;
+    scrollbar-color: var(--magenta) transparent;
   }
   .body::-webkit-scrollbar { width: 8px; }
-  .body::-webkit-scrollbar-thumb { background: rgba(0, 255, 65, 0.3); border-radius: 4px; }
+  .body::-webkit-scrollbar-thumb { background: rgba(255, 43, 214, 0.45); border-radius: 4px; }
   .line { white-space: pre-wrap; word-break: break-word; }
   .prompt { color: var(--cyan); }
-  .user { color: var(--green); }
+  .user { color: var(--red); }
   .path { color: var(--yellow); }
   .err { color: var(--red); }
   .dim { color: var(--grey); }
   .accent { color: var(--magenta); }
-  .ok { color: var(--green); }
+  .ok { color: var(--cyan); }
   .ascii {
-    color: var(--green);
-    text-shadow: 0 0 6px rgba(0, 255, 65, 0.6);
+    position: relative;
+    display: inline-block;
+    color: var(--ink);
     font-size: 11px;
     line-height: 1.05;
     margin: 8px 0 12px;
   }
-  .ascii.glitch { animation: glitch 4s 1s infinite; }
-  @keyframes glitch {
-    0%, 92% { text-shadow: 0 0 6px rgba(0, 255, 65, 0.6); transform: none; }
-    93% { text-shadow: 2px 0 var(--cyan), -2px 0 var(--magenta); transform: translate(-1px, 0); }
-    94% { text-shadow: -2px 0 var(--cyan), 2px 0 var(--magenta); transform: translate(1px, 0); }
-    95% { text-shadow: 0 0 6px rgba(0, 255, 65, 0.6); transform: none; }
+  .ascii.glitch::before,
+  .ascii.glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .ascii.glitch::before { color: var(--magenta); animation: sliceA 0.9s steps(2, end) infinite; }
+  .ascii.glitch::after { color: var(--cyan); animation: sliceB 0.9s steps(2, end) infinite; }
+  @keyframes sliceA {
+    0%   { transform: translate(-2px, 0);  clip-path: inset(0 0 62% 0); }
+    25%  { transform: translate(-4px, 1px); clip-path: inset(18% 0 50% 0); }
+    50%  { transform: translate(-1px, 0);  clip-path: inset(40% 0 30% 0); }
+    75%  { transform: translate(-3px, -1px); clip-path: inset(8% 0 70% 0); }
+    100% { transform: translate(-2px, 0);  clip-path: inset(0 0 62% 0); }
+  }
+  @keyframes sliceB {
+    0%   { transform: translate(2px, 0);  clip-path: inset(62% 0 0 0); }
+    25%  { transform: translate(4px, -1px); clip-path: inset(50% 0 16% 0); }
+    50%  { transform: translate(1px, 0);  clip-path: inset(70% 0 4% 0); }
+    75%  { transform: translate(3px, 1px); clip-path: inset(30% 0 46% 0); }
+    100% { transform: translate(2px, 0);  clip-path: inset(62% 0 0 0); }
   }
   .input-row {
     display: flex;
@@ -128,21 +149,21 @@
     gap: 8px;
   }
   .input-row .promptline { color: var(--cyan); white-space: nowrap; }
-  .input-row .promptline .user { color: var(--green); }
+  .input-row .promptline .user { color: var(--red); }
   .input-row .promptline .path { color: var(--yellow); }
   #cmd {
     flex: 1;
     background: transparent;
     border: 0;
     outline: 0;
-    color: var(--green);
+    color: var(--ink);
     font: inherit;
     caret-color: transparent;
   }
   .caret {
     display: inline-block;
     width: 8px; height: 1em;
-    background: var(--green);
+    background: var(--magenta);
     vertical-align: text-bottom;
     margin-left: 2px;
     animation: blink 1s steps(2) infinite;
@@ -151,22 +172,21 @@
   a.linkish {
     color: var(--cyan);
     text-decoration: none;
-    border-bottom: 1px dashed rgba(0, 255, 255, 0.4);
+    border-bottom: 1px dashed rgba(0, 240, 255, 0.45);
   }
-  a.linkish:hover { color: var(--green); border-color: var(--green); }
-  .hint {
-    margin-top: 10px;
-    color: var(--grey);
-    font-size: 12px;
-  }
-  .hint kbd {
-    background: rgba(0, 255, 65, 0.08);
-    border: 1px solid rgba(0, 255, 65, 0.25);
+  a.linkish:hover { color: var(--yellow); border-color: var(--yellow); }
+  kbd {
+    background: rgba(255, 225, 77, 0.1);
+    border: 1px solid rgba(255, 225, 77, 0.4);
     border-radius: 3px;
     padding: 1px 6px;
-    color: var(--green);
+    color: var(--yellow);
     font-family: inherit;
     font-size: 11px;
+  }
+  @media (max-width: 900px) {
+    body { justify-content: center; padding-left: 16px; }
+    canvas#rift { left: 50%; width: 110vmin; height: 110vmin; }
   }
   @media (max-width: 560px) {
     body { font-size: 13px; padding: 8px; }
@@ -174,18 +194,21 @@
     .ascii { font-size: 8px; }
     .title { display: none; }
   }
+  @media (prefers-reduced-motion: reduce) {
+    .terminal, .ascii.glitch::before, .ascii.glitch::after, .caret { animation: none; }
+  }
 </style>
 </head>
 <body>
-<canvas id="rain"></canvas>
-<div class="scanlines"></div>
+<canvas id="rift"></canvas>
+<div class="halftone"></div>
 
 <div class="terminal" id="terminal">
   <div class="chrome">
     <div class="dot r"></div>
     <div class="dot y"></div>
     <div class="dot g"></div>
-    <div class="title">tony@portfolio: ~ — bash — 80x24</div>
+    <div class="title">spider-society://anomaly-404 — glitch</div>
   </div>
   <div class="body" id="body">
     <div id="output"></div>
@@ -197,6 +220,7 @@
   </div>
 </div>
 
+<script src="/assets/spiderverse/rift.js"></script>
 <script>
 (function () {
   var output    = document.getElementById('output');
@@ -253,7 +277,7 @@
     })();
   }
 
-  // Type a "command" line (cyan prompt + green text being typed) and resolve when done
+  // Type a "command" line (cyan prompt + typed text) and resolve when done
   function typeCommand(text, speed) {
     return new Promise(function (resolve) {
       var line = document.createElement('div');
@@ -309,7 +333,7 @@
     },
     cd: function (arg) {
       if (!arg || arg === '~' || arg === '/' || arg === '..' || arg === 'home') {
-        writeLine('<span class="dim">redirecting to /</span>');
+        writeLine('<span class="dim">jumping back to earth-1610...</span>');
         setTimeout(function () { location.href = '/'; }, 350);
         return;
       }
@@ -339,7 +363,7 @@
     },
     sudo: function () {
       writeLine('<span class="err">[sudo] password for visitor:</span> <span class="dim">****************</span>');
-      writeLine('<span class="err">visitor is not in the sudoers file. This incident will be reported.</span>');
+      writeLine('<span class="err">visitor is not in the sudoers file. This incident will be reported to the Spider-Society.</span>');
     },
     clear: function () {
       output.innerHTML = '';
@@ -369,7 +393,7 @@
 
   // ── Boot sequence ──────────────────────────────────────────────────────────
   function boot() {
-    writeLine('<span class="dim">Last login: ' + new Date().toUTCString() + ' on ttys000</span>');
+    writeLine('<span class="err">⚠ anomaly detected</span> <span class="dim">— you glitched into Earth-404</span>');
     return typeCommand('cd ' + requestedPath, 75)
       .then(function () { return pause(220); })
       .then(function () {
@@ -381,8 +405,9 @@
       .then(function () {
         var d = el('pre', 'ascii glitch');
         d.textContent = ASCII_404;
+        d.setAttribute('data-text', ASCII_404);
         output.appendChild(d);
-        writeLine('<span class="dim">the page you requested could not be located on this server.</span>');
+        writeLine('<span class="dim">this page does not exist in any known universe.</span>');
         return pause(380);
       })
       .then(function () { return typeCommand('help', 90); })
@@ -435,38 +460,10 @@
   // Click anywhere in the terminal body refocuses input
   bodyEl.addEventListener('click', function () { cmdInput.focus(); });
 
-  // ── Matrix rain background ─────────────────────────────────────────────────
-  (function rain() {
-    var canvas = document.getElementById('rain');
-    var ctx = canvas.getContext('2d');
-    var cols, drops;
-    var glyphs = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンｱｲｳｴｵｶｷｸｹｺ0123456789ABCDEF<>/$#@!*+=';
-
-    function resize() {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-      cols = Math.floor(canvas.width / 14);
-      drops = new Array(cols).fill(0).map(function () {
-        return Math.random() * -canvas.height / 16;
-      });
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    function frame() {
-      ctx.fillStyle = 'rgba(4, 4, 15, 0.08)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.font = '14px ui-monospace, Menlo, Consolas, monospace';
-      ctx.fillStyle = '#00ff41';
-      for (var i = 0; i < cols; i++) {
-        var ch = glyphs.charAt(Math.floor(Math.random() * glyphs.length));
-        ctx.fillText(ch, i * 14, drops[i] * 16);
-        if (drops[i] * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
-      }
-    }
-    setInterval(frame, 55);
-  })();
+  // ── Rift background (assets/spiderverse/rift.js) ───────────────────────────
+  if (window.GlitchRift) {
+    window.GlitchRift.mount(document.getElementById('rift'), { intensity: 1.4, coreScale: 0.3, maxDpr: 1, specks: 10 });
+  }
 
   // Kick off
   boot();

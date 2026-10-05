@@ -21,3 +21,4 @@ package-lock.json
 .gitignore
 wrangler.jsonc
 .assetsignore
+.claude/

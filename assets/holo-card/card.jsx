@@ -1,4 +1,5 @@
-// Layered portrait card: original photo + generated matte/background + live foil.
+// Layered portrait card: original photo + generated matte, a live glitch rift
+// behind it, and foil.
 // DeviceOrientation uses intrinsic Z-X-Y angles. Relative quaternions avoid
 // Euler-angle jumps when the phone passes through an upright position.
 function holoOrientation({ alpha, beta, gamma }) {
@@ -208,7 +209,7 @@ function HolographicPortrait() {
               <span className="holo-base holo-plane" />
               <span className="holo-background holo-plane" />
               <span className="holo-grid holo-plane" />
-              <span className="holo-orbit holo-plane"><i /><i /><i /></span>
+              <span className="holo-orbit holo-plane"><HoloRift /></span>
               <span className="holo-watermark holo-plane">T / T</span>
               <span className="holo-person holo-plane">
                 <img src="./assets/holo-card/subject.webp" alt="Bingsen (Tony) Teng" width="1024" height="1024" loading="lazy" decoding="async" draggable="false" />
@@ -218,7 +219,7 @@ function HolographicPortrait() {
               <span className="holo-sparks holo-plane"><i>✦</i><i>✧</i><i>✦</i><i>+</i></span>
               <span className="holo-print holo-plane">
                 <span className="holo-topline"><span><b className="holo-status" /> PERSONAL ARCHIVE</span><span>NO. 001</span></span>
-                <span className="holo-edition">PRISM EDITION</span>
+                <span className="holo-edition">MULTIVERSE EDITION</span>
                 <span className="holo-sidecode">CYBERSECURITY / AI / ENGINEERING</span>
                 <span className="holo-identity">
                   <span className="holo-overline">DEVELOPER · BUILDER · EXPLORER</span>
@@ -258,4 +259,16 @@ function HolographicPortrait() {
       <a className="holo-contact" href="mailto:bingsen.teng777@gmail.com">Let's build something <span aria-hidden="true">↗</span></a>
     </div>
   );
+}
+
+// A live dimensional rift behind the portrait (the site's glitch renderer);
+// it only animates while the card is on screen.
+function HoloRift() {
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    if (!window.GlitchRift) return;
+    const rift = window.GlitchRift.mount(ref.current, { intensity: 1, coreScale: 0.3, specks: 6 });
+    return () => rift.destroy();
+  }, []);
+  return <canvas ref={ref} className="holo-rift" aria-hidden="true" />;
 }
