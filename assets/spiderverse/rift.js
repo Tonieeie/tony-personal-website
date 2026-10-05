@@ -264,7 +264,7 @@
   // (a scratch canvas for the stepped edge).
   function paintRift(ctx, rng, w, h, frame, state) {
     var k = state.intensity;
-    var cx = w / 2, cy = h / 2;
+    var cx = state.center ? state.center[0] : w / 2, cy = state.center ? state.center[1] : h / 2;
     var R = Math.min(w, h) * state.coreScale;
     var unit = Math.max(1, R / 12);
     // Print-scale details stay a few pixels wide however big the hole gets.
@@ -289,7 +289,7 @@
     // Soft light rays burst out from behind the hole (big rifts only): wide
     // fading wedges in plate colours, a new spray every frame.
     if (R >= 20) {
-      var rayMax = Math.min(w, h) * 0.49;
+      var rayMax = state.center ? Math.hypot(w, h) : Math.min(w, h) * 0.49;
       ctx.globalCompositeOperation = 'lighter';
       for (var ry = 0; ry < 12; ry++) {
         var ra = rng() * TAU, rw = 0.015 + rng() * 0.05, r0 = R * 0.6, r1 = Math.min(rayMax, R * (1.5 + rng() * 0.9));
@@ -317,7 +317,7 @@
       for (var f = 0; f < n; f++) {
         var fa = rng() * TAU, fd = R * (0.92 + rng() * 0.6);
         var fw = R * (0.2 + rng() * 0.6), fh = Math.max(fine, fw * (0.1 + rng() * 0.4));
-        var mag = Math.max(1, unit * (0.18 + rng() * 0.55));
+        var mag = Math.min(6, Math.max(1, unit * (0.18 + rng() * 0.55)));
         var src = tileRect(rng, pickTile(rng, state.tiles), fw / mag, fh / mag);
         ctx.globalAlpha = 0.85 + rng() * 0.15;
         splitFragment(ctx, src, cx + Math.cos(fa) * fd - fw / 2, cy + Math.sin(fa) * fd - fh / 2, fw, fh, fine * (0.7 + rng() * 1.4) * (1 + tear));
@@ -343,7 +343,7 @@
           ctx.closePath();
           ctx.clip();
           ctx.globalAlpha = 0.95;
-          var pm = Math.max(1, unit * 0.3);
+          var pm = Math.min(5, Math.max(1, unit * 0.3));
           splitFragment(ctx, tileRect(rng, pickTile(rng, state.tiles), ps * 1.4 / pm, ps * 1.2 / pm), px0 - ps * 0.7, py0 - ps * 0.6, ps * 1.4, ps * 1.2, fine);
           ctx.restore();
         }
@@ -500,7 +500,8 @@
           if (size < 1.5) continue;
           var srng = mulberry32(it.seed + lap * 131);
           ctx.globalAlpha = Math.min(1, p * 8, (1 - p) * 1.8) * 0.85;
-          splitFragment(ctx, tileRect(srng, pickTile(srng, state.tiles), size / Math.max(1, unit * 0.3), size * 0.45 / Math.max(1, unit * 0.3)),
+          var im = Math.min(5, Math.max(1, unit * 0.3));
+          splitFragment(ctx, tileRect(srng, pickTile(srng, state.tiles), size / im, size * 0.45 / im),
             vx + Math.cos(da) * dr - size / 2, vy + Math.sin(da) * dr - size * 0.225, size, size * 0.45, fine * 0.8 * (1 - p));
         }
         ctx.globalAlpha = 1;
@@ -509,7 +510,8 @@
     if (live && tear) {
       ctx.globalAlpha = 0.4;
       var gh = R * (0.25 + rng() * 0.3);
-      splitFragment(ctx, tileRect(rng, pickTile(rng, state.tiles), (R * 2) / (unit * 1.5), gh / (unit * 1.5)), cx - R, cy - gh / 2 + (rng() - 0.5) * R, R * 2, gh, fine * 2);
+      var gm = Math.min(6, unit * 1.5);
+      splitFragment(ctx, tileRect(rng, pickTile(rng, state.tiles), (R * 2) / gm, gh / gm), cx - R, cy - gh / 2 + (rng() - 0.5) * R, R * 2, gh, fine * 2);
       ctx.globalAlpha = 1;
     }
     ctx.restore();
@@ -623,7 +625,7 @@
   // opts: intensity (1 = idle, ~2 = agitated), coreScale (hole radius as a
   // fraction of the smaller side), maxDpr (1 keeps huge backdrops cheap),
   // seed, tiles (universe indices that bleed through; default all), atlas
-  // (URL override), still (defaults to the reduced-motion preference: one
+  // (URL override), center ([x, y] in CSS px instead of the middle), still (defaults to the reduced-motion preference: one
   // static frame, redrawn only on resize).
   function mount(canvas, opts) {
     opts = opts || {};
@@ -639,6 +641,7 @@
       specks: [],
       inner: [],
       tunnel: false,
+      center: opts.center || null,
       live: true,
       tiles: opts.tiles || null,
       lo: document.createElement('canvas')
@@ -732,6 +735,8 @@
         state.intensity = k;
         if (still) draw(performance.now());
       },
+      // Resize the hole in place (the warp animates this every frame).
+      setCoreScale: function (s) { state.coreScale = s; },
       destroy: function () {
         destroyed = true;
         sync();

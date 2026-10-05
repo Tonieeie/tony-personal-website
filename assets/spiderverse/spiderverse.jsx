@@ -32,20 +32,30 @@ function GlitchRiftIcon({ size = 30, intensity = 1 }) {
 }
 
 // Grow a rift from (x, y) until it swallows the viewport, then call `done`.
+// It is drawn on a full-screen canvas at real resolution while the hole
+// itself grows (accelerating, as if sucked in) until it passes the farthest
+// corner — never a small canvas blown up, which turned to blocky pixels.
 function riftWarp(x, y, done) {
   const veil = document.createElement('div');
   veil.className = 'rift-warp';
   const canvas = document.createElement('canvas');
-  canvas.style.left = x + 'px';
-  canvas.style.top = y + 'px';
   veil.appendChild(canvas);
   document.body.appendChild(veil);
-  const rift = window.GlitchRift.mount(canvas, { intensity: 2, still: false, coreScale: 0.34, maxDpr: 1 });
+  const w = window.innerWidth, h = window.innerHeight, short = Math.min(w, h);
+  const from = 14 / short, to = (Math.hypot(Math.max(x, w - x), Math.max(y, h - y)) * 1.2) / short;
+  window.GlitchRift.loadCore();
+  const rift = window.GlitchRift.mount(canvas, { intensity: 2, still: false, coreScale: from, center: [x, y], maxDpr: 1.5, tunnel: false });
+  const start = performance.now();
+  let raf = requestAnimationFrame(function grow(now) {
+    const p = Math.min(1, (now - start) / 520);
+    rift.setCoreScale(from * Math.pow(to / from, p * p));
+    if (p < 1) raf = requestAnimationFrame(grow);
+  });
   setTimeout(done, 560);
   // Coming back via the back/forward cache restores this page mid-warp.
   window.addEventListener('pageshow', function onShow(e) {
     window.removeEventListener('pageshow', onShow);
-    if (e.persisted) { rift.destroy(); veil.remove(); }
+    if (e.persisted) { cancelAnimationFrame(raf); rift.destroy(); veil.remove(); }
   });
 }
 

@@ -150,8 +150,7 @@ html[data-hero-tone="light"] nav:not(.scrolled) .nav-links a { color: var(--hero
 .rift-link:focus-visible { outline: 2px solid var(--sv-red); outline-offset: 3px; }
 .glitch-rift { display: block; }
 .rift-warp { position: fixed; inset: 0; z-index: 20000; pointer-events: none; animation: riftVeil 0.56s steps(7, end) forwards; }
-.rift-warp canvas { position: absolute; width: 360px; height: 360px; translate: -50% -50%; scale: 0.08; animation: riftSuck 0.56s steps(7, end) forwards; }
-@keyframes riftSuck { to { scale: 10; } }
+.rift-warp canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 @keyframes riftVeil { 0%, 55% { background: rgba(0, 0, 0, 0); } 100% { background: #000; } }
 
 /* ── Footer ───────────────────────────────────────────────────────────────── */
