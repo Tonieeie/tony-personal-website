@@ -98,6 +98,46 @@
     img.src = url || scriptDir + 'rift-core.webp';
   }
 
+  // rift-tunnel.webm/mp4: the hexagonal portal rushing toward the viewer. One
+  // shared muted video, created the first time a big rift is on screen and
+  // played only while at least one is; rifts fall back to rift-core.webp
+  // until it has a frame (or if the browser will not autoplay it).
+  var tunnel = { video: null, users: 0 };
+  function wantTunnel(on) {
+    if (!root.document || !root.document.body) return;
+    tunnel.users = Math.max(0, tunnel.users + (on ? 1 : -1));
+    if (on && !tunnel.video) {
+      var nv = document.createElement('video');
+      nv.muted = true;
+      nv.loop = true;
+      nv.playsInline = true;
+      nv.preload = 'auto';
+      nv.setAttribute('muted', '');
+      nv.setAttribute('playsinline', '');
+      nv.setAttribute('aria-hidden', 'true');
+      nv.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1';
+      ['webm', 'mp4'].forEach(function (ext) {
+        var src = document.createElement('source');
+        src.src = scriptDir + 'rift-tunnel.' + ext;
+        src.type = 'video/' + ext;
+        nv.appendChild(src);
+      });
+      document.body.appendChild(nv);
+      tunnel.video = nv;
+    }
+    var v = tunnel.video;
+    if (!v) return;
+    if (tunnel.users > 0) { var p = v.play(); if (p && p.catch) p.catch(function () {}); } else v.pause();
+  }
+  function liteNetwork() {
+    var c = root.navigator && root.navigator.connection;
+    return !!(c && (c.saveData || /^(slow-2g|2g|3g)$/.test(c.effectiveType || '')));
+  }
+  function tunnelFrame() {
+    var v = tunnel.video;
+    return v && v.readyState >= 2 && !v.paused ? v : null;
+  }
+
   function pickTile(rng, tiles) {
     return tiles && tiles.length ? tiles[(rng() * tiles.length) | 0] : (rng() * ATLAS_TILES) | 0;
   }
@@ -146,6 +186,31 @@
       var wave = Math.sin(a * 2 + t * 1.1 + phase) * 0.45 + Math.sin(a * 3 - t * 1.7 + phase * 1.7) * 0.35 + Math.sin(a * 5 + t * 2.6 + phase * 2.3) * 0.2;
       var d = r * (1 + lobes * wave + (rng() - 0.5) * 2 * jitter);
       pts.push([cx + Math.cos(a) * d, cy + Math.sin(a) * d]);
+    }
+    return pts;
+  }
+
+  // Hexagonal outline, like the film's portals: six corners that breathe in
+  // and out on their own clocks, a slow turn, and edges split into `sub`
+  // segments whose points jitter so the rim boils. Same point count and
+  // conventions as riftBlob, so everything downstream works on either.
+  function riftHex(rng, opts) {
+    var cx = opts.cx || 0, cy = opts.cy || 0, r = opts.r, t = opts.t || 0, phase = opts.phase || 0;
+    var lobes = opts.lobes == null ? 0.14 : opts.lobes, jitter = opts.jitter == null ? 0.05 : opts.jitter;
+    var sub = opts.sub || 3, rot = (opts.rot == null ? -Math.PI / 2 : opts.rot) + t * 0.05;
+    var corners = [];
+    for (var k = 0; k < 6; k++) {
+      var a = rot + (k / 6) * TAU, d = r * (1 + lobes * Math.sin(t * (1.1 + k * 0.23) + phase + k * 1.7));
+      corners.push([cx + Math.cos(a) * d, cy + Math.sin(a) * d]);
+    }
+    var pts = [];
+    for (var c = 0; c < 6; c++) {
+      var p = corners[c], q = corners[(c + 1) % 6];
+      for (var e = 0; e < sub; e++) {
+        var u = e / sub, x = p[0] + (q[0] - p[0]) * u, y = p[1] + (q[1] - p[1]) * u;
+        var dx = x - cx, dy = y - cy, dl = Math.hypot(dx, dy) || 1, j = (rng() - 0.5) * 2 * jitter * r;
+        pts.push([x + (dx / dl) * j, y + (dy / dl) * j]);
+      }
     }
     return pts;
   }
@@ -206,9 +271,9 @@
     var fine = Math.min(unit, 3.5);
     var t = frame / 12;
     var tear = state.tearing ? 1 : 0;
-    // A polygon, not a circle: 18 straight-edged vertices, big travelling
-    // lobes, and a jitter that boils the edge on every frame.
-    var blob = riftBlob(rng, { cx: cx, cy: cy, r: R, n: 18, t: t, phase: state.phase, lobes: 0.28 + 0.06 * tear, jitter: 0.05 + 0.03 * k });
+    // A hexagon, like the film's portals, whose corners breathe and whose
+    // edges boil on every frame.
+    var blob = riftHex(rng, { cx: cx, cy: cy, r: R * 1.06, t: t, phase: state.phase, lobes: 0.16 + 0.05 * tear, jitter: 0.035 + 0.025 * k });
     // Tear frames snap a run of vertices out into a spike or in as a dent.
     if (tear) {
       var at = (rng() * blob.length) | 0, push = (rng() < 0.6 ? 0.32 : -0.24) * R;
@@ -331,8 +396,17 @@
       // The far end drifts a little, so the tunnel seems to sway.
       var vx = cx + Math.sin(t * 0.7 + state.phase) * R * 0.1, vy = cy + Math.cos(t * 0.55 + state.phase) * R * 0.08;
       var hasCore = state.live && core.state === 'ready';
+      var tv = state.live && state.tunnel ? tunnelFrame() : null;
       var rings = 6, drift = (t * 0.4) % 1;
-      if (hasCore) {
+      if (tv) {
+        // The portal itself: the video's nested hexagons rushing out of the
+        // core fill the hole (sampled on twos with the rest of the rift).
+        ctx.imageSmoothingEnabled = true;
+        var tk = R * 3.0;
+        ctx.drawImage(tv, vx - tk / 2, vy - tk / 2, tk, tk);
+        ctx.imageSmoothingEnabled = false;
+        hasCore = true;
+      } else if (hasCore) {
         // The tunnel: two copies of the core zooming in from the far end half
         // a cycle apart (an endless fall), slowly turning, each dragged toward
         // the lens in fainter, brighter passes — the smeared space.
@@ -354,6 +428,8 @@
         ctx.globalCompositeOperation = 'source-over';
         ctx.globalAlpha = 1;
         ctx.imageSmoothingEnabled = false;
+      }
+      if (hasCore && !tv) {
         // Light pouring out of the far end.
         var glow = ctx.createRadialGradient(vx, vy, 0, vx, vy, R * 0.3);
         glow.addColorStop(0, 'rgba(255, 250, 225, 0.45)');
@@ -363,10 +439,12 @@
         ctx.fillStyle = glow;
         ctx.fillRect(vx - R * 0.5, vy - R * 0.5, R, R);
         ctx.globalCompositeOperation = 'source-over';
+      }
+      if (hasCore) {
         // The mouth darkens into violet, with a band of halftone dots.
-        var mouth = ctx.createRadialGradient(cx, cy, R * 0.45, cx, cy, R * 1.25);
+        var mouth = ctx.createRadialGradient(cx, cy, R * (tv ? 0.62 : 0.45), cx, cy, R * 1.25);
         mouth.addColorStop(0, 'rgba(14, 4, 28, 0)');
-        mouth.addColorStop(1, 'rgba(14, 4, 28, 0.9)');
+        mouth.addColorStop(1, 'rgba(14, 4, 28, ' + (tv ? 0.75 : 0.9) + ')');
         ctx.fillStyle = mouth;
         ctx.fillRect(cx - R * 1.4, cy - R * 1.4, R * 2.8, R * 2.8);
         if (state.dots) {
@@ -560,6 +638,7 @@
       tearing: false,
       specks: [],
       inner: [],
+      tunnel: false,
       live: true,
       tiles: opts.tiles || null,
       lo: document.createElement('canvas')
@@ -617,6 +696,10 @@
       var awake = onScreen && !document.hidden && !destroyed && !still;
       if (awake && !raf) raf = requestAnimationFrame(loop);
       if (!awake && raf) { cancelAnimationFrame(raf); raf = 0; }
+      // Only rifts big enough to show a tunnel use the portal video, and not
+      // on Save-Data or a slow link (the still core is shown instead).
+      var wants = awake && opts.tunnel !== false && !liteNetwork() && Math.min(box.w, box.h) * state.coreScale >= 20;
+      if (wants !== state.tunnel) { state.tunnel = wants; wantTunnel(wants); }
     }
 
     function resize() {
@@ -627,7 +710,8 @@
     resize();
     // A still frame is redrawn once the atlas arrives; a live one picks it up.
     loadAtlas(opts.atlas, function () { if (!destroyed) draw(performance.now()); });
-    loadCore(opts.core, function () { if (!destroyed) draw(performance.now()); });
+    // Only rifts big enough to show a tunnel need the core texture.
+    if (Math.min(box.w, box.h) * state.coreScale >= 20) loadCore(opts.core, function () { if (!destroyed) draw(performance.now()); });
     var dot = document.createElement('canvas');
     dot.width = dot.height = 6;
     var dctx = dot.getContext('2d');
@@ -694,6 +778,7 @@
     loadCore: loadCore,
     mulberry32: mulberry32,
     riftBlob: riftBlob,
+    riftHex: riftHex,
     paintRift: paintRift,
     paintGlitchBars: paintGlitchBars
   };

@@ -47,6 +47,19 @@ test('riftBlob breathes within its lobe + jitter envelope', () => {
   );
 });
 
+test('riftHex is a six-cornered outline that breathes within its envelope', () => {
+  const opts = { cx: 0, cy: 0, r: 100, t: 2, phase: 0.5, lobes: 0.16, jitter: 0.04, sub: 3 };
+  const pts = GlitchRift.riftHex(GlitchRift.mulberry32(5), opts);
+  assert.equal(pts.length, 18, '6 corners x 3 points per edge');
+  for (const [x, y] of pts) {
+    const d = Math.hypot(x, y);
+    // Edge midpoints of a hexagon sit at cos(30deg) of the corner radius.
+    assert.ok(d >= 100 * (Math.cos(Math.PI / 6) * (1 - 0.16) - 0.04) - 1e-9 && d <= 100 * (1 + 0.16 + 0.04) + 1e-9, `radius ${d}`);
+  }
+  assert.deepEqual(GlitchRift.riftHex(GlitchRift.mulberry32(5), opts), pts, 'deterministic for a seed');
+  assert.ok(fs.existsSync(path.join(root, 'assets/spiderverse/rift-tunnel.webm')) && fs.existsSync(path.join(root, 'assets/spiderverse/rift-tunnel.mp4')), 'portal video ships in both formats');
+});
+
 test('paintRift and paintGlitchBars draw without a real canvas', () => {
   const state = { intensity: 1.5, coreScale: 0.3, phase: 1, tearing: true, specks: [{ a: 0, d: 1.3, s: 1, v: 0.05, ink: 2 }] };
   const ctx = mockContext();
@@ -134,6 +147,18 @@ test('parallax layers declare a depth', () => {
   assert.match(css, /\.sv-px \{ transform: translate3d\(calc\(var\(--px\) \* var\(--d, 0\)/);
   assert.ok((jsx.match(/sv-px/g) || []).length >= 20, 'layers across the universes are tagged');
   assert.match(jsx, /\(hover: hover\) and \(pointer: fine\)/, 'mouse/trackpad only');
+});
+
+test('phone slices ship for every hero video and stay inside the frame', () => {
+  const jsx = read('assets/spiderverse/spiderverse.jsx');
+  const crops = JSON.parse(jsx.match(/const SV_MOBILE_CROP = (\{[^}]*\})/)[1].replace(/'/g, '"'));
+  const cropW = Number(jsx.match(/SV_CROP_W = (\d+)/)[1]), frameW = Number(jsx.match(/SV_FRAME_W = (\d+)/)[1]);
+  assert.equal(Object.keys(crops).length, 5);
+  for (const [name, x] of Object.entries(crops)) {
+    assert.ok(x >= 0 && x + cropW <= frameW, `${name} slice inside the frame`);
+    for (const ext of ['webm', 'mp4', 'webp']) assert.ok(fs.existsSync(path.join(root, `assets/spiderverse/${name}-m.${ext}`)), `${name}-m.${ext}`);
+  }
+  assert.ok(!/new Image\(\)\.src = `\.\/assets\/spiderverse\/\$\{name\}/.test(jsx), 'no up-front preload of every poster');
 });
 
 test('hero shows no universe labels', () => {

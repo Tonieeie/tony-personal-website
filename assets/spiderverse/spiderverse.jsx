@@ -295,10 +295,70 @@ function MilesDecor() {
 
 // A muted background loop that only plays while on screen; reduced-motion
 // visitors get the poster frame instead.
+// ── MEDIA ───────────────────────────────────────────────────────────────────
+// Hero videos are 1536 x 1024 loops. A portrait phone only ever shows a narrow
+// vertical slice of the frame (the stage is shifted per universe), so phones
+// get a pre-cut 692 x 1024 version of just that slice: same sharpness, about
+// half the bytes. Save-Data or a 2G/3G link gets the still poster instead.
+const SV_MEDIA = './assets/spiderverse/';
+const SV_FRAME_W = 1536, SV_CROP_W = 692;
+// Left edge (px of the full frame) of each phone slice; see the -m files.
+const SV_MOBILE_CROP = { 'miles-street': 844, 'gwen-drums': 652, 'peni-rooftop': 576, 'dunhuang-sky': 606, 'toon-street': 790 };
+
+function svLiteMedia() {
+  const c = navigator.connection;
+  return !!(c && (c.saveData || /^(slow-2g|2g|3g)$/.test(c.effectiveType || '')));
+}
+
+// Portrait phones only: there the visible slice is < 42% of the stage width,
+// inside the 45% that was cut.
+function svPortraitPhone() {
+  return window.innerWidth <= 640 && window.innerWidth / (1.5 * window.innerHeight + 40) <= 0.42;
+}
+
+function svVideoType() {
+  const probe = document.createElement('video');
+  return probe.canPlayType && probe.canPlayType('video/webm; codecs="vp9"') ? 'webm' : 'mp4';
+}
+
+// The files a hero video uses on this screen: poster, webm, mp4, and where a
+// phone slice sits on the stage (fractions of its width).
+function svVideoFiles(name) {
+  const x = svPortraitPhone() ? SV_MOBILE_CROP[name] : undefined;
+  const base = SV_MEDIA + name + (x === undefined ? '' : '-m');
+  return {
+    poster: base + '.webp', webm: base + '.webm', mp4: base + '.mp4',
+    slice: x === undefined ? null : { left: (x / SV_FRAME_W) * 100 + '%', width: (SV_CROP_W / SV_FRAME_W) * 100 + '%' },
+  };
+}
+
+// Each universe's media, so the next world can be fetched shortly before the
+// cut instead of everything up front.
+const UV_MEDIA = {
+  miles: { video: 'miles-street' },
+  gwen: { video: 'gwen-drums' },
+  punk: { images: ['punk-plate', 'punk-guitarist', 'punk-paper', 'punk-flyers', 'punk-star', 'punk-star-sm'] },
+  peni: { video: 'peni-rooftop' },
+  dunhuang: { video: 'dunhuang-sky', images: ['dunhuang-wheel'] },
+  toon: { video: 'toon-street' },
+};
+
+function warmUniverse(id, stillOnly) {
+  const media = UV_MEDIA[id];
+  if (!media) return;
+  (media.images || []).forEach(n => { new Image().src = SV_MEDIA + n + '.webp'; });
+  if (!media.video) return;
+  const files = svVideoFiles(media.video);
+  new Image().src = files.poster;
+  // Reading the whole body puts it in the HTTP cache for the <video> to reuse.
+  if (!stillOnly) fetch(files[svVideoType()], { priority: 'low' }).then(r => r.blob()).catch(() => {});
+}
+
 function LoopVideo({ name, className }) {
   const reduced = useSvReducedMotion();
   const ref = React.useRef(null);
-  const base = './assets/spiderverse/' + name;
+  const files = React.useMemo(() => svVideoFiles(name), [name]);
+  const still = reduced || svLiteMedia();
   React.useEffect(() => {
     const video = ref.current;
     if (!video) return;
@@ -309,12 +369,12 @@ function LoopVideo({ name, className }) {
     });
     io.observe(video);
     return () => io.disconnect();
-  }, [reduced]);
-  if (reduced) return <img className={className} src={base + '.webp'} alt="" />;
+  }, [still]);
+  if (still) return <img className={className} src={files.poster} alt="" style={files.slice} />;
   return (
-    <video ref={ref} className={className} poster={base + '.webp'} autoPlay muted loop playsInline preload="auto">
-      <source src={base + '.webm'} type="video/webm" />
-      <source src={base + '.mp4'} type="video/mp4" />
+    <video ref={ref} className={className} style={files.slice} poster={files.poster} autoPlay muted loop playsInline preload="auto">
+      <source src={files.webm} type="video/webm" />
+      <source src={files.mp4} type="video/mp4" />
     </video>
   );
 }
@@ -366,7 +426,9 @@ function GwenMotes({ depth }) {
 function GwenDecor() {
   return (
     <>
-      <LoopVideo name="gwen-drums" className="gw-video sv-px" />
+      <div className="sv-stage sv-px">
+        <LoopVideo name="gwen-drums" className="sv-video" />
+      </div>
       <i className="gw-shade" />
       <i className="gw-beams sv-px" />
       <GwenMotes depth="far" />
@@ -572,7 +634,6 @@ function MultiverseHero({ role }) {
   const awake = onScreen && pageVisible;
 
   React.useEffect(() => {
-    ['miles-street', 'gwen-drums', 'punk-plate', ...PK_PIECES.map(p => 'punk-' + p.id), 'peni-rooftop', 'dunhuang-sky', 'dunhuang-wheel', 'toon-street'].forEach(name => { new Image().src = `./assets/spiderverse/${name}.webp`; });
     const io = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting), { threshold: 0.1 });
     io.observe(heroRef.current);
     const onVisibility = () => setPageVisible(!document.hidden);
@@ -617,6 +678,14 @@ function MultiverseHero({ role }) {
       hero.style.removeProperty('--py');
     };
   }, [reduced]);
+
+  // Fetch the next world ~2.5 s before the cut (stills only on slow links).
+  React.useEffect(() => {
+    if (cycle.paused || !awake) return;
+    const next = UNIVERSES[(cycle.index + 1) % UNIVERSES.length].id;
+    const timer = setTimeout(() => warmUniverse(next, reduced || svLiteMedia()), Math.max(0, HOLD_MS - 2500));
+    return () => clearTimeout(timer);
+  }, [cycle.index, cycle.paused, reduced, awake]);
 
   // Restarting on every index change also resets the timer after a manual jump.
   React.useEffect(() => {

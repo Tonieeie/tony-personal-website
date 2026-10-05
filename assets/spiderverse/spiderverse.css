@@ -360,7 +360,7 @@ footer { border-image: linear-gradient(90deg, transparent, rgba(255, 42, 61, 0.6
   --hero-nav-ink: #4a1530;
 }
 .uv-gwen { background: #f6c9dc; }
-.gw-video { inset: -14px; width: calc(100% + 28px); height: calc(100% + 28px); object-fit: cover; object-position: 60% 50%; --d: 10; }
+.uv-gwen .sv-stage { --d: 10; }
 .gw-wash { inset: 0; background: linear-gradient(90deg, rgba(255, 236, 244, 0.55) 0%, rgba(255, 236, 244, 0.35) 35%, rgba(255, 236, 244, 0) 60%); }
 .gw-paper { inset: 0; background: var(--sv-grain); mix-blend-mode: multiply; opacity: 0.6; }
 /* Back plane: a plum shadow in the stage corner and under the kit, so the
@@ -725,7 +725,7 @@ footer { border-image: linear-gradient(90deg, transparent, rgba(255, 42, 61, 0.6
   .uv-miles .sv-stage { translate: -82% -50%; }
   .mm-wash { background: radial-gradient(ellipse 85% 34% at 40% 52%, rgba(5, 4, 12, 0.72), rgba(5, 4, 12, 0.3) 75%, rgba(5, 4, 12, 0) 100%); }
   .mm-spray { opacity: 0.4; }
-  .gw-video { object-position: 72% 50%; }
+  .uv-gwen .sv-stage { translate: -65% -50%; }
   .gw-wash { background: radial-gradient(ellipse 85% 34% at 40% 52%, rgba(255, 236, 244, 0.7), rgba(255, 236, 244, 0.25) 75%, rgba(255, 236, 244, 0) 100%); }
   .uv-punk .sv-stage { translate: -66% -50%; }
   .pk-wash { background: radial-gradient(ellipse 85% 34% at 40% 52%, rgba(12, 10, 40, 0.7), rgba(12, 10, 40, 0.25) 75%, rgba(12, 10, 40, 0) 100%); }
